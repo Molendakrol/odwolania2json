@@ -1,0 +1,87 @@
+# Słowniki dla ekstraktorów pól. Zmiana etykiet/wzorców nie wymaga zmian w kodzie.
+
+# --------------------------------------------------------------- przelew
+# Etykiety pól na potwierdzeniu przelewu, w kolejności priorytetu.
+# Wartość jest szukana bezpośrednio po etykiecie (ta sama linia, po kropkach/dwukropku, lub kolejna linia).
+[przelew.labels]
+data_operacji = ["data operacji", "data transakcji", "data realizacji", "data wykonania", "data księgowania", "w dniu"]
+kwota = ["kwota operacji", "kwota przelewu", "kwota", "wartość", "w kwocie"]
+# Ostatnie pozycje (płatnik / beneficjent itd.) to etykiety stron przelewu, po których numer rachunku
+# występuje po nazwie i adresie — używane tylko, gdy brak etykiety samego rachunku.
+z_rachunku = ["rachunek obciążany", "rachunek nadawcy", "rachunek zleceniodawcy", "rachunek płatnika", "z rachunku",
+              "płatnik", "zleceniodawca", "dane nadawcy", "dane zleceniodawcy", "nadawca"]
+na_rachunek = ["rachunek odbiorcy", "rachunek beneficjenta", "rachunek uznawany", "rachunek adresata", "rachunek kontrahenta",
+               "na rachunek", "beneficjent", "adresat przelewu", "dane odbiorcy", "dane kontrahenta", "odbiorca"]
+numer_transakcji = ["numer referencyjny operacji", "numer referencyjny", "nr ref.", "nr referencyjny", "identyfikator operacji",
+                    "identyfikator transakcji", "numer transakcji", "id transakcji"]
+tytul = ["tytuł przelewu", "tytułem", "tytuł", "szczegóły płatności", "opis"]
+
+# Etykiety, które NIE są wartością pola mimo podobieństwa (dystraktory).
+[przelew.exclude]
+data_operacji = ["data wydruku", "data wygenerowania", "wydrukowano", "wygenerowano"]
+kwota = ["opłata", "prowizja"]
+
+# --------------------------------------------------------------- odwołanie: zaskarżona czynność
+# Kolejność ma znaczenie: bardziej szczegółowe kategorie przed ogólnymi
+# (np. "zaniechanie odrzucenia" przed "odrzucenie", "wyjaśnienia SWZ" przed "SWZ").
+# Wzorce dopasowywane do tekstu małymi literami.
+[[czynnosc]]
+id = 10
+opis = "Zaniechanie unieważnienia postępowania"
+patterns = ['zaniecha\w*\s+unieważni', 'nie\s+unieważni']
+
+[[czynnosc]]
+id = 7
+opis = "Zaniechanie odrzucenia oferty"
+patterns = ['zaniecha\w*\s+odrzuc', 'nie\s+odrzucił']
+
+[[czynnosc]]
+id = 8
+opis = "Zaniechanie wykluczenia wykonawcy"
+patterns = ['zaniecha\w*\s+wyklucz', 'nie\s+wykluczył']
+
+[[czynnosc]]
+id = 12
+opis = "Projektowane postanowienia umowy"
+patterns = ['projektowan\w*\s+postanowie\w*\s+umowy', 'istotn\w*\s+postanowie\w*\s+umowy', 'wzor\w*\s+umowy']
+
+[[czynnosc]]
+id = 11
+opis = "Opis przedmiotu zamówienia (OPZ)"
+patterns = ['opis\w*\s+przedmiotu\s+zamówienia', '\bopz\b']
+
+[[czynnosc]]
+id = 5
+opis = "Modyfikacja treści SWZ"
+patterns = ['modyfikac\w*\s+(treści\s+)?(swz|specyfikacji)', 'zmodyfikował', 'zmian\w*\s+treści\s+(swz|specyfikacji)']
+
+[[czynnosc]]
+id = 6
+opis = "Odpowiedzi/wyjaśnienia do SWZ"
+patterns = ['wyjaśnie\w*\s+(do\s+)?(treści\s+)?(swz|specyfikacji)', 'odpowiedzi\s+(i\s+wyjaśnienia\s+)?(na\s+pytania|do\s+treści)', 'udzielił\w*\s+odpowiedzi']
+
+[[czynnosc]]
+id = 9
+opis = "Decyzja o unieważnieniu postępowania"
+patterns = ['unieważni\w*\s+(postępowani|przetarg)', 'o\s+unieważnieniu', 'unieważnił']
+
+[[czynnosc]]
+id = 1
+opis = "Decyzja o odrzuceniu oferty"
+patterns = ['odrzuceni\w*\s+ofert', 'odrzucił\w*\s+ofert', 'o\s+odrzuceniu']
+
+[[czynnosc]]
+id = 3
+opis = "Decyzja o wykluczeniu wykonawcy"
+patterns = ['wykluczeni\w*', 'wykluczył']
+
+[[czynnosc]]
+id = 2
+opis = "Ogłoszenie wyboru oferty"
+patterns = ['wyb(ór|oru|orze)\s+(?:\w+\s+){0,2}?(oferty|najkorzystniejsz)', 'ogłosił\w*\s+wybór', 'dokonał\w*\s+wyboru']
+
+[[czynnosc]]
+id = 4
+opis = "Publikacja specyfikacji warunków zamówienia (SWZ)"
+patterns = ['specyfikac\w*\s+warunków\s+zamówienia', '\bswz\b', 'dokument\w*\s+zamówienia',
+            'zamieści\w*\s+ogłosze', 'opublikowa\w*\s+ogłosze']

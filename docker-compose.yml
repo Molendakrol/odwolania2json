@@ -1,0 +1,14 @@
+# Uruchomienie:  docker compose up --build
+# Wejście:  ./input/<sprawa>/<dokument>.pdf  (montowane tylko do odczytu)
+# Wyjście:  ./output/<sprawa>/<dokument>.json, diagnostyka w ./diagnostics
+services:
+  odwolania2json:
+    build: .
+    image: odwolania2json:latest
+    network_mode: "none"          # przetwarzanie w pełni lokalne — bez dostępu do sieci
+    volumes:
+      - ./input:/app/input:ro
+      - ./output:/app/output
+      - ./diagnostics:/app/diagnostics
+    # --overwrite: kolejne uruchomienia nadpisują wyniki w ./output (świadoma decyzja dla trybu kontenerowego)
+    command: ["run", "--input", "input", "--output", "output", "--diagnostics", "diagnostics", "--overwrite"]

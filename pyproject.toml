@@ -1,0 +1,12 @@
+[project]
+name = "odwolania2json"
+version = "0.1.0"
+description = "Klasyfikacja i ekstrakcja danych z dokumentów spraw odwoławczych KIO (HackNation 2026)"
+requires-python = ">=3.13"
+dependencies = ["pymupdf>=1.24,<3"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+# Ostrzeżenia z bindingów SWIG w PyMuPDF — nie dotyczą naszego kodu.
+filterwarnings = ["ignore:builtin type .* has no __module__ attribute:DeprecationWarning"]

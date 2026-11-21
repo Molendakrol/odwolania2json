@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Odwołania2JSON</title>
+  <meta name="description" content="Przetwarzanie dokumentów spraw odwoławczych KIO do ustrukturyzowanego formatu JSON.">
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Przejdź do treści</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="brand" href="#/pulpit" aria-label="Odwołania2JSON — pulpit">
+        <span class="brand__name">Odwołania2JSON</span>
+        <span class="brand__tagline">Przetwarzanie dokumentów spraw odwoławczych KIO do formatu JSON</span>
+      </a>
+      <div class="app-header__meta" id="header-meta">
+        <span class="badge badge--neutral">Praca lokalna</span>
+      </div>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="sidenav">Menu</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidenav" id="sidenav" aria-label="Nawigacja główna">
+      <ul class="sidenav__list">
+        <li><a class="sidenav__link" href="#/pulpit" data-route="pulpit">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10"/></svg>Pulpit</a></li>
+        <li><a class="sidenav__link" href="#/dokumenty" data-route="dokumenty">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M7 3h7l5 5v13H7zM14 3v5h5"/></svg>Dokumenty</a></li>
+        <li><a class="sidenav__link" href="#/przetwarzanie" data-route="przetwarzanie">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h6M17 14l3 3-3 3"/></svg>Przetwarzanie dokumentów</a></li>
+        <li><a class="sidenav__link" href="#/wyniki" data-route="wyniki">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>Wyniki i eksport</a></li>
+        <li><a class="sidenav__link" href="#/informacje" data-route="informacje">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/></svg>Informacje o systemie</a></li>
+      </ul>
+    </nav>
+
+    <main class="main" id="main" tabindex="-1">
+      <div class="main__inner" id="view" aria-live="polite"></div>
+      <footer class="app-footer">
+        Odwołania2JSON · HackNation 2026 · Dokumenty są przetwarzane lokalnie na tym komputerze — bez wysyłania do usług zewnętrznych.
+      </footer>
+    </main>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

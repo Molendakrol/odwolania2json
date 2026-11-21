@@ -1,0 +1,4 @@
+# Zależności uruchomieniowe (Python 3.13+)
+# PyMuPDF: ekstrakcja tekstu z PDF i OCR (wbudowany Tesseract); licencja AGPL-3.0 (open source).
+# OCR wymaga pliku ocr/tessdata/pol.traineddata (w repozytorium) — bez instalacji systemowej.
+pymupdf>=1.24,<3

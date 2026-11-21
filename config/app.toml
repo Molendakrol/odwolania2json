@@ -1,0 +1,14 @@
+[output]
+# Co zapisać dla dokumentu sklasyfikowanego jako `unknown` (README organizatora: „pusty plik .json”).
+# Format NIE jest potwierdzony przez organizatora — to rozwiązanie techniczne zespołu:
+#   "empty_object" -> plik z zawartością {} (poprawny JSON)   <- przyjęte (decyzja zespołu)
+#   "empty_file"   -> plik 0 bajtów (dosłowne „pusty plik”; niepoprawny jako JSON)
+unknown = "empty_object"
+
+[ocr]
+# OCR jako fallback dla stron bez warstwy tekstowej (Tesseract wbudowany w PyMuPDF; lokalnie, CPU).
+enabled = true
+language = "pol"          # wymaga pliku <language>.traineddata
+dpi = 300                 # rozdzielczość renderowania strony do OCR
+# Katalog z plikami .traineddata; pusty = ./ocr/tessdata, potem TESSDATA_PREFIX, potem instalacja Tesseracta.
+tessdata_dir = ""

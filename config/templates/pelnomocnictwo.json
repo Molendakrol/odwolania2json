@@ -1,0 +1,24 @@
+{
+  "mocodawca": [
+    {
+      "data": {
+        "imie_nazwisko": "string|null",
+        "krs": "string|null",
+        "nazwa": "string|null",
+        "nip": "string|null",
+        "typ": "string|null"
+      },
+      "podpisujacy": [
+        {
+          "imie_nazwisko": "string|null"
+        }
+      ]
+    }
+  ],
+  "pelnomocnicy": [
+    {
+      "imie_nazwisko": "string|null",
+      "pesel": "string|null"
+    }
+  ]
+}

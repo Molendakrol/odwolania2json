@@ -1,0 +1,192 @@
+# Reguły klasyfikatora dokumentów (RuleClassifier).
+#
+# Każda klasa ma listę sygnałów. Sygnał to wzorzec regex dopasowywany do tekstu
+# znormalizowanego (małe litery, scalone rozstrzelone słowa) w wybranej strefie:
+#   head — pierwsze `head_chars` znaków dokumentu (nagłówek / pierwsza strona),
+#   body — pierwsze `body_pages` stron (README: kluczowe informacje są zwykle na 3 pierwszych stronach).
+# Wzorce są dopasowywane także do wersji bez polskich znaków (odporność na OCR),
+# więc pisz je z polskimi znakami — wersja bez nich powstaje automatycznie.
+#
+# Klasa jest kandydatem, gdy:
+#   suma wag dopasowanych sygnałów >= min_score
+#   ORAZ liczba różnych dopasowanych sygnałów >= min_signals
+#   ORAZ dopasowano co najmniej jeden sygnał z `required_any`.
+# Gdy kandydatów brak -> unknown. Gdy kandydatów jest kilku, a przewaga zwycięzcy
+# jest mniejsza niż `decision.min_margin` -> unknown (sygnały sprzeczne).
+# Weto (sekcja [[veto]]) wymusza unknown niezależnie od punktacji.
+#
+# Dodanie nowej klasy = nowa sekcja [classes.<nazwa>] w tym pliku; kod się nie zmienia.
+
+[zones]
+head_chars = 3000
+body_pages = 3
+
+[decision]
+min_margin = 3.0
+
+# ---------------------------------------------------------------- odwołanie
+[classes.odwolanie]
+description = "Odwołanie do Prezesa Krajowej Izby Odwoławczej"
+min_score = 6.0
+min_signals = 3
+required_any = ["tytul_odwolanie", "adresat_prezes_kio"]
+
+[[classes.odwolanie.signals]]
+name = "tytul_odwolanie"
+pattern = '(^|\n)\s*odwołanie\s*($|\n|od\s|wykonawcy|na\s)'
+zone = "head"
+weight = 3.0
+
+[[classes.odwolanie.signals]]
+name = "adresat_prezes_kio"
+pattern = 'prezes\w*\s+krajowej\s+izby\s+odwoławczej'
+zone = "head"
+weight = 2.0
+
+[[classes.odwolanie.signals]]
+name = "rola_odwolujacy"
+pattern = 'odwołując\w*\s*:'
+zone = "head"
+weight = 2.0
+
+[[classes.odwolanie.signals]]
+name = "rola_zamawiajacy"
+pattern = 'zamawiając\w*\s*(:|\()'
+zone = "head"
+weight = 1.0
+
+[[classes.odwolanie.signals]]
+name = "zarzuty"
+pattern = '\bzarzu(t|ty|tów|cam|ca)\b'
+zone = "body"
+weight = 1.0
+
+[[classes.odwolanie.signals]]
+name = "wnosze_odwolanie"
+pattern = 'wnosz[ęe]\s+(o\b|odwołanie)'
+zone = "body"
+weight = 1.0
+
+[[classes.odwolanie.signals]]
+name = "podstawa_pzp_odwolanie"
+pattern = 'art\.?\s*5(05|13|15)\b'
+zone = "body"
+weight = 1.0
+
+# ---------------------------------------------------------------- pełnomocnictwo
+[classes.pelnomocnictwo]
+description = "Pełnomocnictwo (procesowe) do reprezentowania wykonawcy"
+min_score = 5.0
+min_signals = 2
+required_any = ["tytul_pelnomocnictwo", "formula_udzielenia", "mocodawca"]
+
+[[classes.pelnomocnictwo.signals]]
+name = "tytul_pelnomocnictwo"
+pattern = '(^|\n)\s*pełnomocnictwo(\s+procesowe)?\s*($|\n)'
+zone = "head"
+weight = 3.0
+
+[[classes.pelnomocnictwo.signals]]
+name = "formula_udzielenia"
+pattern = '(udziela\w*\s+(dalszego\s+)?pełnomocnictwa|ustanawia\w*\s+pełnomocnik|\bupoważniam\b|umocowuj\w*)'
+zone = "head"
+weight = 3.0
+
+[[classes.pelnomocnictwo.signals]]
+name = "sekcja_pelnomocnik"
+# Nagłówek sekcji/etykieta w układzie formularzowym: "Pełnomocnik", "Pełnomocnicy:".
+pattern = '(^|\n)\s*pełnomocni(k|cy)\s*(:|$|\n)'
+zone = "head"
+weight = 1.0
+
+[[classes.pelnomocnictwo.signals]]
+name = "mocodawca"
+pattern = '\bmocodaw(ca|cy|cą|cę|com)\b'
+zone = "head"
+weight = 2.0
+
+[[classes.pelnomocnictwo.signals]]
+name = "przyjecie_pelnomocnictwa"
+pattern = 'pełnomocnictwo\s+przyjmuję'
+zone = "body"
+weight = 1.0
+
+[[classes.pelnomocnictwo.signals]]
+name = "zakres_umocowania"
+pattern = '(do\s+reprezentowania|zastępowania\s+(wykonawcy|mocodawcy)|zakres\s+(umocowania|pełnomocnictwa))'
+zone = "head"
+weight = 1.0
+
+# ---------------------------------------------------------------- przelew
+[classes.przelew]
+description = "Potwierdzenie wykonania przelewu bankowego"
+min_score = 6.0
+min_signals = 3
+required_any = ["numer_rachunku"]
+
+[[classes.przelew.signals]]
+name = "numer_rachunku"
+# NRB/IBAN: 26 cyfr, opcjonalnie z prefiksem PL i spacjami co 4 cyfry.
+pattern = '\b(pl\s?)?\d{2}(\s?\d{4}){6}\b'
+zone = "head"
+weight = 2.0
+
+[[classes.przelew.signals]]
+name = "dwa_rachunki"
+pattern = '\b(pl\s?)?\d{2}(\s?\d{4}){6}\b'
+zone = "head"
+weight = 1.0
+min_count = 2
+
+[[classes.przelew.signals]]
+name = "slownictwo_przelewu"
+pattern = '(potwierdzenie\s+(wykonania\s+|realizacji\s+)?(polecenia\s+)?(przelewu|transakcji|operacji)|polecenie\s+przelewu|dowód\s+wykonania\s+przelewu|wykonano\s+przelew|przelew\s+krajowy|szczegóły\s+zlecenia)'
+zone = "head"
+weight = 2.0
+
+[[classes.przelew.signals]]
+name = "etykiety_rachunkow"
+pattern = '(rachunek\s+(odbiorcy|nadawcy|zleceniodawcy|obciążany|uznawany|beneficjenta|kontrahenta)|z\s+rachunku|na\s+rachunek)'
+zone = "head"
+weight = 2.0
+
+[[classes.przelew.signals]]
+name = "kwota_operacji"
+# Etykieta kwoty albo sama kwota z walutą (np. „17.00 PLN” w tabeli bez etykiety).
+pattern = '(kwota|wartość|w\s+kwocie|\d[\d\s]*[.,]\d{2}\s*(pln|zł))'
+zone = "head"
+weight = 1.0
+
+[[classes.przelew.signals]]
+name = "status_referencja"
+pattern = '(zrealizowan\w*|nr\s+ref|numer\s+referencyjny|identyfikator\s+operacji|numer\s+transakcji)'
+zone = "head"
+weight = 1.0
+
+# ---------------------------------------------------------------- weta (-> unknown)
+# Dokumenty, które zawierają słownictwo klas pozytywnych, ale nimi nie są.
+# Weto działa, gdy dopasowano WSZYSTKIE wzorce z `all`.
+
+[[veto]]
+name = "orzeczenie_kio"
+description = "Wyrok / postanowienie Krajowej Izby Odwoławczej"
+zone = "head"
+all = ['sygn\.\s*akt', '(^|\n)\s*(wyrok|postanowienie)\b', '(orzeka|krajowa\s+izba\s+odwoławcza\s*[-–]?\s*w\s+składzie)']
+
+[[veto]]
+name = "ogloszenie_bzp"
+description = "Ogłoszenie w Biuletynie Zamówień Publicznych"
+zone = "head"
+all = ['(^|\n)\s*ogłoszenie\s+o\s+(zamówieniu|wyniku|zmianie)', 'sekcja\s+i\b']
+
+[[veto]]
+name = "ogloszenie_ted"
+description = "Ogłoszenie z Dziennika Urzędowego UE (TED)"
+zone = "head"
+all = ['(oj\s+s\s+\d+/\d{4}|ted\s+website)', '(nabywca|ogłoszenie\s+o\s+zamówieniu)']
+
+[[veto]]
+name = "zgloszenie_przystapienia"
+description = "Zgłoszenie przystąpienia do postępowania odwoławczego"
+zone = "head"
+all = ['(^|\n)\s*zgłoszenie\s+przystąpienia']

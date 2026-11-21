@@ -1,0 +1,40 @@
+# --- środowiska i cache -------------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+
+# --- pliki generowane podczas działania ---------------------------------------------
+diagnostics/
+input/*
+!input/README.md
+output/*
+!output/README.md
+
+# --- lokalne raporty i migawki (tymczasowe, zawierają ścieżki lokalne) ---------------
+reports/
+baselines/
+*.tar.gz
+
+# --- dane, których nie publikujemy ---------------------------------------------------
+# Surowe dokumenty zewnętrzne (m.in. orzeczenia KIO z nazwami stron) — źródła opisane w datasets/external/SOURCES.md
+datasets/external/raw/
+# Manifesty ze ścieżkami bezwzględnymi do lokalnej kopii danych organizatora
+datasets/manifests/organizer_skany.jsonl
+datasets/manifests/organizer_official_local.jsonl
+datasets/manifests/skany_dev.jsonl
+datasets/manifests/skany_holdout.jsonl
+
+# --- sekrety i konfiguracja lokalna ---------------------------------------------------
+.env
+.env.*
+*.key
+*.pem
+secrets*
+.claude/
+
+# Dokumenty dodane przez interfejs (domyślnie poza projektem; na wypadek --data-dir wewnątrz repozytorium)
+data/
+documents/

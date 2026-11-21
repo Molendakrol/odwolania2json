@@ -1,0 +1,12 @@
+.git
+.venv
+**/__pycache__
+.pytest_cache
+input/*
+output/*
+diagnostics
+reports
+baselines
+datasets
+tests
+*.tar.gz

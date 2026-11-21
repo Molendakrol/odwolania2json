@@ -1,0 +1,8 @@
+{"pdf": "../../tests/fixtures/official/p01_odwolanie.pdf", "label": "odwolanie", "gt": "../../tests/fixtures/official_gold/p01_odwolanie.json", "group": "przyklad_01", "source": "organizer"}
+{"pdf": "../../tests/fixtures/official/p01_pelnomocnictwo.pdf", "label": "pelnomocnictwo", "gt": "../../tests/fixtures/official_gold/p01_pelnomocnictwo.json", "group": "przyklad_01", "source": "organizer"}
+{"pdf": "../../tests/fixtures/official/p01_potwierdzenie_przelewu.pdf", "label": "przelew", "gt": "../../tests/fixtures/official_gold/p01_potwierdzenie_przelewu.json", "group": "przyklad_01", "source": "organizer"}
+{"pdf": "../../tests/fixtures/official/p42_odwolanie.pdf", "label": "odwolanie", "gt": "../../tests/fixtures/official_gold/p42_odwolanie.json", "group": "przyklad_42", "source": "organizer"}
+{"pdf": "../../tests/fixtures/official/neg_postanowienie_kio.pdf", "label": "unknown", "group": "negatywne", "source": "organizer"}
+{"pdf": "../../tests/fixtures/official/neg_ogloszenie_bzp.pdf", "label": "unknown", "group": "negatywne", "source": "organizer"}
+{"pdf": "../../tests/fixtures/official/neg_skan_bez_tekstu.pdf", "label": "unknown", "group": "negatywne", "source": "organizer-scan"}
+{"pdf": "../../tests/fixtures/official/szablon_skan_odwolanie.pdf", "label": "odwolanie", "group": "szablon", "source": "organizer-scan"}

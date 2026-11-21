@@ -1,0 +1,68 @@
+/* Odwołania2JSON — design tokens.
+   Stylistyka inspirowana serwisami administracji publicznej: białe tło, grafitowy tekst,
+   stonowany czerwony akcent, cienkie obramowania, małe zaokrąglenia, bez gradientów i efektów. */
+:root {
+  /* Kolory bazowe */
+  --color-bg: #ffffff;
+  --color-bg-subtle: #f5f5f5;      /* tło sekcji pomocniczych, nagłówków tabel */
+  --color-bg-muted: #ebebeb;
+  --color-text: #1b1b1b;           /* grafit — tekst główny */
+  --color-text-muted: #5c5c5c;     /* tekst pomocniczy (kontrast AA na białym) */
+  --color-border: #d6d6d6;         /* obramowania paneli */
+  --color-border-strong: #a8a8a8;
+
+  /* Akcent */
+  --color-primary: #c8203a;        /* stonowany czerwony */
+  --color-primary-hover: #9f1239;
+  --color-primary-soft: #fbeaed;   /* tło zaznaczeń, bardzo delikatne */
+
+  /* Uzupełniający niebieski (linki, informacje) */
+  --color-link: #0052a5;
+  --color-link-hover: #003b78;
+  --color-info: #0052a5;
+  --color-info-soft: #eaf1f9;
+
+  /* Statusy — stonowane, zawsze z tekstem/ikoną, nie samym kolorem */
+  --color-success: #1e6b3a;
+  --color-success-soft: #e8f3ec;
+  --color-warning: #8a5a00;
+  --color-warning-soft: #fdf3e1;
+  --color-error: #b3261e;
+  --color-error-soft: #fbeaea;
+
+  --color-focus: #0052a5;
+
+  /* Typografia */
+  --font-sans: "Open Sans", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  --text-xs: 0.8125rem;   /* 13px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.5rem;      /* 24px — nagłówek sekcji */
+  --text-2xl: 1.875rem;   /* 30px — tytuł strony */
+  --leading: 1.55;
+  --weight-normal: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Odstępy (skala 4px) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* Kształt */
+  --radius-sm: 2px;
+  --radius: 4px;
+  --border-width: 1px;
+  --accent-width: 4px;    /* belka akcentu (aktywna nawigacja, komunikaty) */
+
+  /* Układ */
+  --header-height: 4.5rem;
+  --sidebar-width: 16rem;
+  --content-max: 68rem;
+}
