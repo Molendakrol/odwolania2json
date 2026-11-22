@@ -14,6 +14,8 @@ Rozwiązanie zadania Urzędu Zamówień Publicznych · HackNation 2026
 
 <img src="docs/img/dokumenty.png" alt="Lista dokumentów z rozpoznanymi typami i statusami" width="900">
 
+**🎬 [Zobacz film: jak korzystać z aplikacji (1:43)](docs/video/odwolania2json-tutorial.mp4)**
+
 </div>
 
 ---
