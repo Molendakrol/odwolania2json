@@ -18,8 +18,8 @@ class ExtractionContext:
     pages: list[str]
 
     def __post_init__(self) -> None:
-        from .normalizers import fix_legal_form, fix_lone_prepositions
-        self.pages = [fix_lone_prepositions(fix_legal_form(p)) for p in self.pages]
+        from .normalizers import fix_ampersand, fix_legal_form, fix_lone_prepositions
+        self.pages = [fix_lone_prepositions(fix_legal_form(fix_ampersand(p))) for p in self.pages]
 
     @property
     def text(self) -> str:

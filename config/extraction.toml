@@ -3,6 +3,12 @@
 # --------------------------------------------------------------- przelew
 # Etykiety pól na potwierdzeniu przelewu, w kolejności priorytetu.
 # Wartość jest szukana bezpośrednio po etykiecie (ta sama linia, po kropkach/dwukropku, lub kolejna linia).
+[przelew]
+# Prefiks kraju („PL”) w numerach rachunków, gdy stoi w dokumencie:
+#   false — zapis jak w przykładowych JSON-ach organizatora (26 cyfr; tak jest w 120 z 122 rachunków w danych),
+#   true  — zgodnie z ustaleniem organizatora „z prefiksem kraju, jeśli występuje” (tak w 2 skanach).
+keep_country_prefix = false
+
 [przelew.labels]
 data_operacji = ["data operacji", "data transakcji", "data realizacji", "data wykonania", "data księgowania", "w dniu"]
 kwota = ["kwota operacji", "kwota przelewu", "kwota", "wartość", "w kwocie"]

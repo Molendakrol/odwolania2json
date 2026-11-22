@@ -292,6 +292,10 @@ Tak przetwarza się wiele spraw naraz. Tego trybu używa też ocena organizatora
 Ponowne uruchomienie, gdy wyniki już istnieją, wymaga `--overwrite` (`start.bat --overwrite` / `./start.sh --overwrite`).
 To ochrona przed przypadkowym nadpisaniem.
 
+Tryb wsadowy przetwarza kilka plików naraz: domyślnie tyle procesów, ile rdzeni procesora minus jeden.
+Największe pliki (skany) startują pierwsze. Wynik jest identyczny jak przy przetwarzaniu po kolei. Liczbę procesów
+zmienisz opcją `--workers`, np. `./start.sh --workers 4`, a `--workers 1` oznacza przetwarzanie po kolei.
+
 <details>
 <summary>Więcej poleceń CLI</summary>
 
@@ -300,6 +304,7 @@ python -m odwolania2json run                                       # ./input -> 
 python -m odwolania2json run sciezka/do/sprawy --output wyniki --diagnostics diag
 python -m odwolania2json run dokument.pdf --output wyniki          # pojedynczy plik
 python -m odwolania2json run --no-ocr                              # bez OCR
+python -m odwolania2json run --workers 4                           # 4 procesy równolegle (1 = po kolei)
 python -m odwolania2json classify input/case1/plik.pdf             # tylko klasyfikacja
 ```
 
@@ -408,7 +413,8 @@ Normalizacja:
 
 - daty w formacie ISO;
 - kwoty jako liczby;
-- rachunki jako 26 cyfr;
+- rachunki jako 26 cyfr bez spacji; prefiks „PL” z dokumentu zachowywany po włączeniu
+  `keep_country_prefix` w `config/extraction.toml`;
 - numery TED jako `NNNNNN-YYYY`;
 - numery BZP bez spacji.
 
@@ -505,7 +511,8 @@ Opis zbiorów testowych: `datasets/BENCHMARK.md`.
 - Konwencje nierozstrzygnięte przez organizatora:
   - format wyniku dla `unknown` (`{}`; alternatywa w `config/app.toml`);
   - typ PESEL (tekst);
-  - prefiks „PL” w numerach rachunków.
+  - prefiks „PL” w numerach rachunków: przykładowe JSON-y organizatora go pomijają, ustalenie organizatora
+    mówi o zachowaniu — przełącznik `keep_country_prefix` w `config/extraction.toml`.
 - Ochrona przed orzeczeniami KIO opiera się w dużej mierze na wecie rozpoznającym nagłówek orzeczenia.
 
 ## Struktura projektu

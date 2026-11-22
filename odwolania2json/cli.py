@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from functools import partial
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
@@ -31,6 +32,7 @@ from .classify import DEFAULT_RULES_PATH, RuleClassifier, RuleConfigError
 from .evaluation import evaluate_dirs, format_report
 from .ocr import engine_from_settings, load_ocr_settings
 from .output import APP_CONFIG, OutputExistsError, load_unknown_mode, write_outputs
+from .parallel import default_workers, process_paths
 from .pipeline import Pipeline, find_pdfs
 from .report import write_diagnostics
 
@@ -49,6 +51,8 @@ def _build_parser() -> argparse.ArgumentParser:
     r.add_argument("--app-config", default=str(APP_CONFIG), help="Plik konfiguracji aplikacji (TOML)")
     r.add_argument("--save-text", action="store_true", help="Zapisz też wyciągnięty tekst w diagnostyce")
     r.add_argument("--overwrite", action="store_true", help="Pozwól nadpisać istniejące pliki wynikowe w --output")
+    r.add_argument("--workers", type=int, default=None,
+                   help=f"Liczba równoległych procesów (domyślnie: liczba rdzeni - 1, teraz {default_workers()}; 1 = kolejno)")
 
     c = sub.add_parser("classify", help="Wyciągnij tekst i sklasyfikuj PDF lub katalog PDF-ów")
     c.add_argument("path", nargs="?", help="Plik PDF lub katalog (domyślnie wartość --input)")
@@ -103,15 +107,20 @@ def _process(pipeline: Pipeline, target: Path):
     return [pipeline.process_file(target)]
 
 
+def build_pipeline(rules: str, app_config: str, no_ocr: bool, extract_fields: bool) -> Pipeline:
+    """Pipeline z konfiguracji; funkcja modułu, aby dało się ją przekazać do procesów roboczych."""
+    engine = None if no_ocr else engine_from_settings(load_ocr_settings(Path(app_config)))
+    return Pipeline(RuleClassifier.from_file(rules), extract_fields=extract_fields, ocr_engine=engine)
+
+
 def _make_pipeline(args, extract_fields: bool) -> Pipeline | None:
     try:
-        settings = load_ocr_settings(Path(getattr(args, "app_config", APP_CONFIG)))
-        engine = None if args.no_ocr else engine_from_settings(settings)
-        if engine is not None:
-            ok, detail = engine.is_available()
+        pipeline = build_pipeline(args.rules, str(getattr(args, "app_config", APP_CONFIG)), args.no_ocr, extract_fields)
+        if pipeline.ocr_engine is not None:
+            ok, detail = pipeline.ocr_engine.is_available()
             if not ok:
                 print(f"UWAGA: OCR niedostępny — skany nie zostaną odczytane ({detail})", file=sys.stderr)
-        return Pipeline(RuleClassifier.from_file(args.rules), extract_fields=extract_fields, ocr_engine=engine)
+        return pipeline
     except (OSError, RuleConfigError, ValueError, KeyError) as exc:
         print(f"Błąd konfiguracji: {exc}", file=sys.stderr)
         return None
@@ -161,12 +170,22 @@ def cmd_run(args: argparse.Namespace) -> int:
     except (OSError, KeyError, ValueError) as exc:
         print(f"Błąd konfiguracji aplikacji ({args.app_config}): {exc}", file=sys.stderr)
         return 2
-    pipeline = _make_pipeline(args, extract_fields=True)
-    if pipeline is None:
+    if args.workers is not None and args.workers < 1:
+        print("Błąd: --workers musi być liczbą dodatnią", file=sys.stderr)
         return 2
-    results = _process(pipeline, target)
-    if results is None:
-        return 1
+    if _make_pipeline(args, extract_fields=True) is None:   # walidacja konfiguracji i ostrzeżenie o OCR
+        return 2
+    if target.is_dir():
+        paths, base = find_pdfs(target), target
+        if not paths:
+            print(f"Brak plików PDF w katalogu: {target}", file=sys.stderr)
+            return 1
+    else:
+        paths, base = [target], None
+    workers = args.workers or default_workers()
+    factory = partial(build_pipeline, args.rules, str(args.app_config), args.no_ocr, True)
+    print(f"Przetwarzanie {len(paths)} plików PDF ({min(workers, len(paths))} proc.)", file=sys.stderr)
+    results = process_paths(paths, base, factory, workers)
     try:
         report = write_outputs(results, out, unknown_mode, overwrite=args.overwrite)
     except OutputExistsError as exc:

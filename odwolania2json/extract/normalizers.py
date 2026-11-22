@@ -70,15 +70,23 @@ def parse_amount(text: str | None) -> float | None:
 ACCOUNT_RE = re.compile(r"(?<!\d)(?:PL\s?)?\d{2}(?:\s?\d{4}){6}(?!\d)", re.IGNORECASE)
 
 
-def normalize_account(text: str | None) -> str | None:
-    """Numer rachunku jako 26 cyfr (bez 'PL' i spacji)."""
+def normalize_account(text: str | None, keep_prefix: bool = False) -> str | None:
+    """Numer rachunku bez białych znaków: 26 cyfr. Z `keep_prefix` prefiks kraju 'PL' zostaje, jeśli stoi
+    w dokumencie (ustalenie organizatora); domyślnie jak w przykładowych JSON-ach organizatora — bez 'PL'."""
     if not text:
         return None
     m = ACCOUNT_RE.search(text)
     if not m:
         return None
     digits = re.sub(r"\D", "", m.group(0))
-    return digits if len(digits) == 26 else None
+    if len(digits) != 26:
+        return None
+    return ("PL" if keep_prefix and m.group(0)[:2].upper() == "PL" else "") + digits
+
+
+def account_digits(account: str | None) -> str | None:
+    """Same cyfry numeru rachunku (do porównań: 'PL61…' i '61…' to ten sam rachunek)."""
+    return re.sub(r"\D", "", account) if account else None
 
 
 def digits_only(text: str | None, length: int | tuple[int, ...]) -> str | None:
@@ -155,6 +163,24 @@ _LEGAL_FORM_OCR = re.compile(r"\b([Ss]p)\s*\.\s*[zZ]\s*([oO0])\s*\.\s*([oO0])\s*
 def fix_legal_form(text: str) -> str:
     """'Sp. z 0.0.' / 'Sp.Z o.0.' -> 'Sp. z o.o.' — tylko w obrębie formy prawnej spółki z o.o."""
     return _LEGAL_FORM_OCR.sub(lambda m: f"{m.group(1)}. z o.o.", text)
+
+
+_AMPERSAND_OCR = re.compile(r"(?<=\S) £ (?=\S)")
+
+
+def fix_ampersand(text: str) -> str:
+    """'Olszewski £ Partnerzy' -> 'Olszewski & Partnerzy': OCR myli '&' z '£'; funt jako samodzielny
+    token między słowami nie występuje w polskich dokumentach postępowań."""
+    return _AMPERSAND_OCR.sub(" & ", text)
+
+
+_LEAD_LETTER_NOISE = re.compile(r"^(?![wzou] )[a-ząćęłńóśźż] (?=[A-ZĄĆĘŁŃÓŚŹŻ]{3})")
+
+
+def strip_lead_letter(text: str | None) -> str | None:
+    """'i WPIS OD ODWOŁANIA' -> 'WPIS OD ODWOŁANIA': pojedyncza mała litera przed słowem wersalikami na początku
+    wartości to śmieć OCR (z krawędzi ramki). Przyimki w/z/o/u zostają nietknięte."""
+    return _LEAD_LETTER_NOISE.sub("", text) if text else text
 
 
 _LONE_PREPOSITION = re.compile(r"(?<=[a-ząćęłńóśźż] )([ZW])(?= [a-ząćęłńóśźż])")

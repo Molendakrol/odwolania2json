@@ -11,7 +11,8 @@ import re
 
 from .base import ExtractionContext, FieldResult
 from .normalizers import (
-    ACCOUNT_RE, DATE_RE, collapse_ws, normalize_account, parse_amount, parse_date, strip_ocr_noise,
+    ACCOUNT_RE, DATE_RE, account_digits, collapse_ws, normalize_account, parse_amount, parse_date,
+    strip_lead_letter, strip_ocr_noise,
 )
 
 _AMOUNT_VALUE = re.compile(
@@ -115,6 +116,7 @@ def _extract_title(text: str, labels: list[str], all_labels: list[str]):
         value = collapse_ws(" ".join(p for p in parts if p))
         if value:
             value = strip_ocr_noise(value.strip().strip("„”\"").rstrip(".").strip("„”\"").strip()) or ""
+            value = strip_lead_letter(value) or ""
             return value or None, f"{m.group(0).strip()} {value}", (m.end(), end)
     return None, None, None
 
@@ -122,6 +124,7 @@ def _extract_title(text: str, labels: list[str], all_labels: list[str]):
 def extract_przelew(ctx: ExtractionContext, cfg: dict) -> FieldResult:
     labels: dict[str, list[str]] = cfg["przelew"]["labels"]
     excludes: dict[str, list[str]] = cfg["przelew"].get("exclude", {})
+    keep_prefix = bool(cfg["przelew"].get("keep_country_prefix", False))
     text = ctx.text
     out: dict = {}
     res = FieldResult(data={})
@@ -152,21 +155,23 @@ def extract_przelew(ctx: ExtractionContext, cfg: dict) -> FieldResult:
                                      stop_labels=labels["na_rachunek"])
     raw_na, ev_na = _find_after_labels(text, labels["na_rachunek"], ACCOUNT_RE, ACCOUNT_WINDOW_TABLE, skip=title_span,
                                        stop_labels=labels["z_rachunku"])
-    out["z_rachunku"] = normalize_account(raw_z)
-    out["na_rachunek"] = normalize_account(raw_na)
+    out["z_rachunku"] = normalize_account(raw_z, keep_prefix)
+    out["na_rachunek"] = normalize_account(raw_na, keep_prefix)
     raw_ref, ev_ref = _find_after_labels(text, labels["numer_transakcji"], _REF_VALUE, WINDOW["ref"], skip=title_span)
     out["numer_transakcji"] = raw_ref
     out["tytul"] = out_title
 
     # Rachunki bez etykiet: jeśli w dokumencie (poza tytułem) są dokładnie dwa różne numery i brakuje jednego z nich.
-    accounts = list(dict.fromkeys(
-        normalize_account(a.group(0)) for a in ACCOUNT_RE.finditer(text)
-        if not (title_span and title_span[0] <= a.start() < title_span[1])
-    ))
-    accounts = [a for a in accounts if a]
+    found: dict[str, str] = {}   # cyfry -> pierwsza postać z dokumentu ('PL…' i '…' to ten sam rachunek)
+    for a in ACCOUNT_RE.finditer(text):
+        if title_span and title_span[0] <= a.start() < title_span[1]:
+            continue
+        if acc := normalize_account(a.group(0), keep_prefix):
+            found.setdefault(account_digits(acc), acc)
+    accounts = list(found.values())
     if len(accounts) == 2 and bool(out["z_rachunku"]) != bool(out["na_rachunek"]):
-        known = out["z_rachunku"] or out["na_rachunek"]
-        other = accounts[1] if accounts[0] == known else accounts[0]
+        known = account_digits(out["z_rachunku"] or out["na_rachunek"])
+        other = accounts[1] if account_digits(accounts[0]) == known else accounts[0]
         out["na_rachunek" if out["z_rachunku"] else "z_rachunku"] = other
         res.warnings.append("rachunek bez etykiety uzupełniony jako drugi numer w dokumencie")
 

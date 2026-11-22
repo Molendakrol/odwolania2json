@@ -35,6 +35,7 @@ System to warstwowy pipeline z wyraźnie oddzielonymi etapami. Każdy etap ma w�
 ```
 odwolania2json/
 ├── __main__.py, cli.py        interfejs wiersza poleceń (argparse)
+├── parallel.py              równoległe przetwarzanie wielu PDF-ów w trybie wsadowym (`run --workers`)
 ├── pipeline.py                Pipeline, DocumentResult, ProcessingStatus, find_pdfs — orkiestracja etapów
 ├── pdf_text.py                extract_text → ExtractionResult (warstwa tekstowa + plan OCR + statystyki)
 ├── ocr.py                     OcrEngine (Protocol), PyMuPdfTesseract, load_ocr_settings, engine_from_settings
@@ -112,7 +113,8 @@ flowchart TD
 
 | Moduł | Najważniejsze elementy | Odpowiedzialność |
 |---|---|---|
-| `cli.py` | `main`, `_build_parser`, `cmd_run`, `cmd_classify`, `cmd_evaluate`, `cmd_eval`, `cmd_eval_compare`, `cmd_manifest_organizer`, `_make_pipeline` | parsowanie argumentów, budowa `Pipeline`, wywołanie zapisu i diagnostyki, kody wyjścia |
+| `cli.py` | `main`, `_build_parser`, `cmd_run`, `cmd_classify`, `cmd_evaluate`, `cmd_eval`, `cmd_eval_compare`, `cmd_manifest_organizer`, `_make_pipeline`, `build_pipeline` | parsowanie argumentów, budowa `Pipeline`, wywołanie zapisu i diagnostyki, kody wyjścia |
+| `parallel.py` | `process_paths`, `default_workers` | pula procesów (spawn), największe pliki najpierw, wyniki w kolejności wejściowej, awaryjny powrót do trybu sekwencyjnego |
 | `pipeline.py` | `Pipeline`, `Pipeline.process_file`, `Pipeline.process_dir`, `find_pdfs`, `DocumentResult`, `ProcessingStatus` | kolejność etapów, wynik w pamięci |
 | `pdf_text.py` | `extract_text`, `ExtractionResult`, `ExtractionStatus`, `TextSource`, `OcrInfo`, `MIN_CHARS_DOCUMENT`, `MIN_CHARS_PAGE` | tekst per strona, decyzja o OCR, statystyki jakości tekstu |
 | `ocr.py` | `OcrEngine` (Protocol), `PyMuPdfTesseract`, `OcrSettings`, `load_ocr_settings`, `find_tessdata`, `engine_from_settings` | silnik OCR i jego konfiguracja |
@@ -122,7 +124,7 @@ flowchart TD
 | `extract/__init__.py` | `FieldExtractor`, `EXTRACTORS`, `EXTRACTION_CONFIG` | wybór ekstraktora wg klasy, budowa i walidacja wyniku |
 | `extract/base.py` | `ExtractionContext`, `FieldResult` | wejście i wyjście ekstraktorów |
 | `extract/template.py` | `load_template`, `build_output`, `validate`, `TemplateError`, `TEMPLATES_DIR` | szablony wyniku i walidacja typów |
-| `extract/normalizers.py` | `parse_date`, `parse_amount`, `normalize_account`, `digits_only`, `normalize_ted`, `normalize_bzp`, `clean_person`, `collapse_ws`, `fix_legal_form`, `fix_lone_prepositions`, `strip_ocr_noise`, `drop_punct_tokens`, `repair_email` | normalizacja wartości i kontekstowe korekty OCR |
+| `extract/normalizers.py` | `parse_date`, `parse_amount`, `normalize_account`, `digits_only`, `normalize_ted`, `normalize_bzp`, `clean_person`, `collapse_ws`, `fix_legal_form`, `fix_lone_prepositions`, `fix_ampersand`, `strip_lead_letter`, `account_digits`, `strip_ocr_noise`, `drop_punct_tokens`, `repair_email` | normalizacja wartości i kontekstowe korekty OCR |
 | `extract/entities.py` | `find_ids`, `id_clusters`, `name_before`, `clean_name`, `LEGAL_FORM` | podmioty: nazwa z formą prawną + KRS/NIP/REGON |
 | `extract/odwolanie.py` | `extract_odwolanie` | pola odwołania |
 | `extract/pelnomocnictwo.py` | `extract_pelnomocnictwo` | mocodawcy, podpisujący, pełnomocnicy, PESEL |
@@ -306,7 +308,7 @@ Dwa poziomy:
 |---|---|
 | `parse_date` | ISO `YYYY-MM-DD` z formatów „3 września 2026”, „03.09.2026”, „3-9-2026”, „2026-09-03”, „3 IX 2026” |
 | `parse_amount` | liczba zmiennoprzecinkowa („7 500,00 PLN” → `7500.0`) |
-| `normalize_account` | **26 cyfr, bez prefiksu „PL” i bez spacji** (patrz rozbieżność w 17.3) |
+| `normalize_account` | 26 cyfr bez spacji; prefiks „PL” z dokumentu zachowany tylko przy `[przelew] keep_country_prefix = true` w `config/extraction.toml` (domyślnie wyłączone — patrz 17.3) |
 | `digits_only` | KRS/NIP (10 cyfr), REGON (9 lub 14) |
 | `normalize_ted` / `normalize_bzp` | `NNNNNN-YYYY` / `YYYY/BZPNNNNNNNN[/NN]` |
 | `clean_person`, `collapse_ws`, `strip_ocr_noise`, `drop_punct_tokens` | czyszczenie nazw i osób |
@@ -438,7 +440,7 @@ Elementy rzeczywiście elastyczne (potwierdzone w kodzie i testach):
 | Miejsce | Deklaracja | Rzeczywistość w kodzie |
 |---|---|---|
 | `README.md` („Klasyfikacja”) i komentarz w nagłówku `config/classifier_rules.toml` | „Dodanie nowej klasy = nowa sekcja … kod się nie zmienia” / „Nową klasę dodaje się sekcją w pliku TOML” | prawda tylko dla **klasyfikatora**; ekstrakcja wymaga kodu (17.1 p. 1–2) |
-| Ustalenie organizatora (rachunki bankowe) | numer rachunku bez białych znaków, **z prefiksem kraju, jeśli występuje w dokumencie** | `normalize_account` zwraca 26 cyfr i **usuwa „PL”**; README opisuje to jako „rachunki jako 26 cyfr” — wymaga decyzji i zmiany w kolejnym etapie |
+| Ustalenie organizatora (rachunki bankowe) | numer rachunku bez białych znaków, **z prefiksem kraju, jeśli występuje w dokumencie** | przełącznik `keep_country_prefix` (`config/extraction.toml`); domyślnie wyłączony, bo przykładowe JSON-y organizatora pomijają „PL” w 120 z 122 rachunków (z „PL” tylko 2 skany) — decyzja zespołu |
 | Ustalenie organizatora (nowe klasy) | dodawanie klas przez plik konfiguracyjny | spełnione częściowo (klasyfikacja tak, ekstrakcja nie) |
 | `config/extraction.toml` (komentarz w nagłówku) | „Zmiana etykiet/wzorców nie wymaga zmian w kodzie” | prawda dla zawartości pliku (przelew, czynności); większość wzorców ekstrakcji jest w kodzie |
 | `README.md` („Testy”) | „~215 testów” | 286 testów + 1 oznaczony `xfail` (stan po P13.4) |
